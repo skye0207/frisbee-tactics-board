@@ -159,6 +159,12 @@ textarea:focus-visible {
   gap: 10px;
   text-align: left;
   font-weight: 650;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sidebar-nav__item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
 }
 .sidebar-nav__item--active {
   color: white;

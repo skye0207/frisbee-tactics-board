@@ -79,7 +79,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .brand-lockup span { display: block; margin-top: 3px; font-size: 10px; color: #93a0b3; letter-spacing: .08em; text-transform: uppercase; }
 .brand-mark { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: @primary; box-shadow: 0 10px 24px fade(@primary, 25%); }
 .sidebar-nav { margin-top: 42px; }
-.sidebar-nav__item { width: 100%; border: 0; border-radius: 10px; background: transparent; color: #9ba8ba; padding: 12px 14px; display: flex; align-items: center; gap: 10px; text-align: left; font-weight: 650; }
+.sidebar-nav__item { width: 100%; border: 0; border-radius: 10px; background: transparent; color: #9ba8ba; padding: 12px 14px; display: flex; align-items: center; gap: 10px; text-align: left; font-weight: 650; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.sidebar-nav__item:hover { color: white; background: rgba(255,255,255,.05); }
 .sidebar-nav__item--active { color: white; background: rgba(255,255,255,.08); }
 .sidebar-tip { margin-top: auto; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.045); padding: 16px; border-radius: 14px; }
 .sidebar-tip__eyebrow { color: #70d7b1; font-size: 10px; letter-spacing: .14em; font-weight: 800; }
