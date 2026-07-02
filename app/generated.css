@@ -619,6 +619,33 @@ textarea:focus-visible {
   font-size: 15px;
   color: #172238;
 }
+.tactic-title-display {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 6px;
+}
+.tactic-title-display strong {
+  font-size: 15px;
+  font-weight: 750;
+  color: #172238;
+}
+.tactic-title-display span {
+  font-size: 10px;
+  color: #7f8a99;
+  margin-top: 2px;
+}
+.property-readonly {
+  border: 1px solid #e5e9ef;
+  border-radius: 8px;
+  background: #fbfcfc;
+  padding: 9px 10px;
+  color: #172238;
+  font-size: 11px;
+}
+.property-readonly--multiline {
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
 .save-state {
   min-width: 78px;
   display: inline-flex;
@@ -1439,6 +1466,9 @@ textarea:focus-visible {
   margin-top: 3px;
   line-height: 1.4;
 }
+.mobile-tabbar {
+  display: none;
+}
 @media (max-width: 1050px) {
   .editor-workspace {
     grid-template-columns: 154px minmax(450px, 1fr) 210px;
@@ -1459,7 +1489,7 @@ textarea:focus-visible {
     display: none;
   }
   .dashboard-main {
-    padding: 28px 18px 50px;
+    padding: 28px 18px 96px;
   }
   .dashboard-header {
     flex-direction: column;
@@ -1474,6 +1504,7 @@ textarea:focus-visible {
     height: auto;
     min-height: 100vh;
     overflow: visible;
+    padding-bottom: 72px;
   }
   .editor-topbar {
     position: sticky;
@@ -1514,5 +1545,40 @@ textarea:focus-visible {
   }
   .field-wrap {
     padding: 14px;
+  }
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: rgba(15, 22, 30, 0.96);
+    backdrop-filter: saturate(140%) blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+  .mobile-tabbar__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 4px;
+    background: transparent;
+    border: 0;
+    color: #9ba8ba;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .mobile-tabbar__item:hover {
+    color: #fff;
+  }
+  .mobile-tabbar__item--active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
   }
 }

@@ -18,9 +18,10 @@ import {
   Save,
   Shield,
   Trash2,
+  Upload,
   UserRound
 } from 'lucide-react';
-import { getTactic, saveTactic } from '@/lib/client-storage';
+import { getTactic, publishTactic, saveTactic } from '@/lib/client-storage';
 import { makePiece } from '@/lib/constants';
 import FieldCanvas from './FieldCanvas';
 import FrameThumbnail from './FrameThumbnail';
@@ -61,7 +62,15 @@ export default function TacticEditor({ tacticId }) {
   const [playbackLabel, setPlaybackLabel] = useState('');
   const [playbackStartIndex, setPlaybackStartIndex] = useState(0);
   const [orientation, setOrientation] = useState('horizontal');
+  const [publishing, setPublishing] = useState(false);
+  const [toast, setToast] = useState(null);
   const saveVersion = useRef(0);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timer = window.setTimeout(() => setToast(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -261,8 +270,22 @@ export default function TacticEditor({ tacticId }) {
     }));
   }
 
-  function togglePlayback() {
-    if (isPlaying) {
+  async function handlePublish() {
+    if (!tactic || publishing) return;
+    const author = window.prompt('署名（选填）', '') || '';
+    setPublishing(true);
+    try {
+      if (dirty) await persist();
+      await publishTactic(tactic, { author });
+      setToast({ kind: 'success', text: `《${tactic.title}》已发布到战术广场` });
+    } catch {
+      setToast({ kind: 'error', text: '发布失败，请稍后再试' });
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  function togglePlayback() {    if (isPlaying) {
       setIsPlaying(false);
       setDisplayFrame(null);
       setPlaybackLabel('');
@@ -300,6 +323,9 @@ export default function TacticEditor({ tacticId }) {
             {saveStatus === 'saving' ? '保存中' : saveStatus === 'saved' ? '已保存' : '有修改'}
           </span>
           <button className="button button--secondary" onClick={persist}><Save size={17} />保存</button>
+          <button className="button button--secondary" onClick={handlePublish} disabled={publishing}>
+            <Upload size={17} />{publishing ? '发布中…' : '发布到广场'}
+          </button>
           <button className="button button--primary" onClick={togglePlayback} disabled={tactic.frames.length < 2}>
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}
             {isPlaying ? '停止播放' : '播放战术'}
@@ -484,6 +510,7 @@ export default function TacticEditor({ tacticId }) {
           </div>
         </aside>
       </div>
+      {toast && <div className={`toast toast--${toast.kind}`}>{toast.text}</div>}
     </main>
   );
 }

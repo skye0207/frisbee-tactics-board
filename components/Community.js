@@ -110,7 +110,11 @@ export default function Community() {
         ) : (
           <div className="tactic-grid">
             {filtered.map((tactic) => (
-              <article className="tactic-card" key={tactic.id}>
+              <article
+                className="tactic-card"
+                key={tactic.id}
+                onClick={() => router.push(`/community/${tactic.id}`)}
+              >
                 <MiniField frame={tactic.frames?.[0]} />
                 <div className="tactic-card__content">
                   <div className="tactic-card__title-row">

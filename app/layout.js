@@ -1,4 +1,5 @@
 import './generated.css';
+import MobileTabBar from '@/components/MobileTabBar';
 
 export const metadata = {
   title: 'frisbee-tactics-board · 飞盘战术板',
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        {children}
+        <MobileTabBar />
+      </body>
     </html>
   );
 }
