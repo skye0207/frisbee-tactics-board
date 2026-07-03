@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, Check, Upload } from 'lucide-react';
 import { fetchCurrentUser, updateCurrentUser } from '@/lib/client-user';
 
-const AVATAR_EMOJIS = ['🦅', '🐢', '🐺', '🦊', '🐼', '🐨', '🐯', '🐸', '🐙', '🦁', '🐬', '🦄', '🐱'];
+const AVATAR_EMOJIS = ['🐼', '🦅', '🐢', '🐺', '🦊', '🐨', '🐯', '🐸', '🐙', '🦁', '🐬', '🦄', '🐱'];
 const GENDERS = [
   { value: '', label: '未选择' },
   { value: 'male', label: '男' },
@@ -26,8 +26,8 @@ export default function UserProfileButton() {
       .finally(() => setLoading(false));
   }, []);
 
-  const label = user?.nickname || '匿名';
-  const avatar = user?.avatar || '🦅';
+  const label = user?.nickname || '…';
+  const avatar = user?.avatar || '🐼';
   const isImage = typeof avatar === 'string' && avatar.startsWith('data:');
 
   return (
@@ -115,6 +115,12 @@ function ProfileModal({ user, onClose, onSaved }) {
     setSaving(true);
     setError('');
     try {
+      const trimmedNickname = nickname.trim();
+      if (!trimmedNickname) {
+        setError('昵称不能为空');
+        setSaving(false);
+        return;
+      }
       const trimmedPhone = phone.trim();
       if (trimmedPhone && !/^1\d{10}$/.test(trimmedPhone)) {
         setError('手机号格式不正确');
@@ -122,14 +128,18 @@ function ProfileModal({ user, onClose, onSaved }) {
         return;
       }
       const next = await updateCurrentUser({
-        nickname: nickname.trim(),
+        nickname: trimmedNickname,
         gender,
         avatar,
         phone: trimmedPhone
       });
       onSaved(next);
-    } catch {
-      setError('保存失败，请稍后再试');
+    } catch (err) {
+      if (err?.code === 'NICKNAME_TAKEN') {
+        setError('该昵称已被占用，换一个试试');
+      } else {
+        setError('保存失败，请稍后再试');
+      }
     } finally {
       setSaving(false);
     }

@@ -77,11 +77,13 @@ export default function Community() {
             <h1>战术广场</h1>
             <p>大家分享的战术。点开预览，或导入到自己的战术库继续编辑。</p>
           </div>
-          <div className={`storage-badge storage-badge--${mode}`}>
-            <Cloud size={15} />
-            {mode === 'cloud' ? '云端数据库' : '本地演示模式'}
+          <div className="dashboard-header__meta">
+            <div className={`storage-badge storage-badge--${mode}`}>
+              <Cloud size={15} />
+              {mode === 'cloud' ? '云端数据库' : '本地演示模式'}
+            </div>
+            <UserProfileButton />
           </div>
-          <UserProfileButton />
         </header>
 
         <div className="dashboard-toolbar">

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { hasDatabase } from '@/lib/db';
-import { resolveUser, updateUserProfile } from '@/lib/user-server';
+import { resolveUser, updateUserProfile, ProfileUpdateError } from '@/lib/user-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,13 @@ export async function PUT(request) {
   const { user, clientId } = await resolveUser(request);
   if (!clientId || !user) return NextResponse.json({ code: 'MISSING_CLIENT_ID' }, { status: 400 });
   const patch = await request.json();
-  const updated = await updateUserProfile(clientId, user.id, patch || {});
-  return NextResponse.json(updated);
+  try {
+    const updated = await updateUserProfile(clientId, user.id, patch || {});
+    return NextResponse.json(updated);
+  } catch (err) {
+    if (err instanceof ProfileUpdateError) {
+      return NextResponse.json({ code: err.code, message: err.message }, { status: 409 });
+    }
+    throw err;
+  }
 }

@@ -341,6 +341,12 @@ textarea:focus-visible {
   gap: 20px;
   flex-wrap: wrap;
 }
+.dashboard-header__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .eyebrow {
   color: #168d61 !important;
   font-size: 10px !important;
@@ -2377,7 +2383,7 @@ textarea:focus-visible {
     align-items: flex-end;
   }
   .user-chip__name {
-    display: none;
+    max-width: 120px;
   }
   .version-item {
     flex-direction: column;
