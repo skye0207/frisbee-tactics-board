@@ -70,7 +70,7 @@ export default function Community() {
         </div>
         <nav className="sidebar-nav">
           <button className="sidebar-nav__item sidebar-nav__item--active"><Compass size={18} />战术广场</button>
-          <button className="sidebar-nav__item" onClick={() => router.push('/')}><Sparkles size={18} />我的战术</button>
+          <button className="sidebar-nav__item" onClick={() => router.push('/tactics')}><Sparkles size={18} />我的战术</button>
         </nav>
         <div className="sidebar-tip">
           <span className="sidebar-tip__eyebrow">社区</span>

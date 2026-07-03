@@ -335,7 +335,7 @@ export default function TacticEditor({ tacticId }) {
     <main className="editor-shell">
       <header className="editor-topbar">
         <div className="editor-topbar__left">
-          <button className="icon-button" onClick={() => router.push('/')} aria-label="返回首页"><ArrowLeft size={19} /></button>
+          <button className="icon-button" onClick={() => router.push('/tactics')} aria-label="返回我的战术"><ArrowLeft size={19} /></button>
           <div className="editor-brand"><Disc3 size={20} /><span>飞盘战术板</span></div>
           <span className="topbar-divider" />
           <input
