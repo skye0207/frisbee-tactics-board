@@ -25,13 +25,14 @@ import {
 import { getTactic, publishTactic, saveTactic } from '@/lib/client-storage';
 import { exportTacticVideo, isVideoExportSupported } from '@/lib/tactic-video';
 import { makePiece } from '@/lib/constants';
+import { uuid } from '@/lib/uuid';
 import FieldCanvas from './FieldCanvas';
 import FrameThumbnail from './FrameThumbnail';
 
 function cloneFrame(frame, index) {
   return {
     ...frame,
-    id: crypto.randomUUID(),
+    id: uuid(),
     name: `第 ${index + 1} 页`,
     pieces: frame.pieces.map(({ curve, ...piece }) => ({ ...piece }))
   };
