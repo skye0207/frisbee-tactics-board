@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, Disc3, Download, Pause, Play, RotateCw } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Disc3, Download, Pause, Play, RotateCw, Video } from 'lucide-react';
 import { getCommunityTactic, importCommunityTactic } from '@/lib/client-storage';
+import { exportTacticVideo, isVideoExportSupported } from '@/lib/tactic-video';
 import FieldCanvas from './FieldCanvas';
 import FrameThumbnail from './FrameThumbnail';
 
@@ -32,6 +33,8 @@ export default function CommunityTacticViewer({ tacticId }) {
   const [playbackStartIndex, setPlaybackStartIndex] = useState(0);
   const [orientation, setOrientation] = useState('horizontal');
   const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const [toast, setToast] = useState(null);
   const cancelledRef = useRef(false);
 
@@ -113,6 +116,29 @@ export default function CommunityTacticViewer({ tacticId }) {
     }
   }
 
+  async function handleExportVideo() {
+    if (!tactic || exporting) return;
+    if (!isVideoExportSupported()) {
+      setToast({ kind: 'error', text: '当前浏览器不支持视频导出，请使用最新版 Chrome / Edge' });
+      return;
+    }
+    if (tactic.frames.length < 2) {
+      setToast({ kind: 'error', text: '至少需要 2 页才能导出为视频' });
+      return;
+    }
+    setExporting(true);
+    setExportProgress(0);
+    try {
+      await exportTacticVideo(tactic, {}, (progress) => setExportProgress(progress));
+      setToast({ kind: 'success', text: '视频已导出（.webm）' });
+    } catch {
+      setToast({ kind: 'error', text: '导出失败，请稍后再试' });
+    } finally {
+      setExporting(false);
+      setExportProgress(0);
+    }
+  }
+
   if (notFound) {
     return (
       <main className="editor-loading">
@@ -147,6 +173,9 @@ export default function CommunityTacticViewer({ tacticId }) {
         <div className="editor-topbar__right">
           <button className="button button--secondary" onClick={handleImport} disabled={importing}>
             <Download size={17} />{importing ? '导入中…' : '导入编辑'}
+          </button>
+          <button className="button button--secondary" onClick={handleExportVideo} disabled={exporting || tactic.frames.length < 2}>
+            <Video size={17} />{exporting ? `导出 ${Math.round(exportProgress * 100)}%` : '导出视频'}
           </button>
           <button className="button button--primary" onClick={togglePlayback} disabled={tactic.frames.length < 2}>
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}

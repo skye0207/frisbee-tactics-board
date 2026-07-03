@@ -19,9 +19,11 @@ import {
   Shield,
   Trash2,
   Upload,
-  UserRound
+  UserRound,
+  Video
 } from 'lucide-react';
 import { getTactic, publishTactic, saveTactic } from '@/lib/client-storage';
+import { exportTacticVideo, isVideoExportSupported } from '@/lib/tactic-video';
 import { makePiece } from '@/lib/constants';
 import FieldCanvas from './FieldCanvas';
 import FrameThumbnail from './FrameThumbnail';
@@ -63,6 +65,8 @@ export default function TacticEditor({ tacticId }) {
   const [playbackStartIndex, setPlaybackStartIndex] = useState(0);
   const [orientation, setOrientation] = useState('horizontal');
   const [publishing, setPublishing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const [toast, setToast] = useState(null);
   const saveVersion = useRef(0);
 
@@ -284,8 +288,8 @@ export default function TacticEditor({ tacticId }) {
       setPublishing(false);
     }
   }
-
-  function togglePlayback() {    if (isPlaying) {
+  function togglePlayback() {
+    if (isPlaying) {
       setIsPlaying(false);
       setDisplayFrame(null);
       setPlaybackLabel('');
@@ -294,6 +298,29 @@ export default function TacticEditor({ tacticId }) {
       setSelectedPieceId(null);
       setPlaybackStartIndex(activeFrameIndex >= tactic.frames.length - 1 ? 0 : activeFrameIndex);
       setIsPlaying(true);
+    }
+  }
+
+  async function handleExportVideo() {
+    if (!tactic || exporting) return;
+    if (!isVideoExportSupported()) {
+      setToast({ kind: 'error', text: '当前浏览器不支持视频导出，请使用最新版 Chrome / Edge' });
+      return;
+    }
+    if (tactic.frames.length < 2) {
+      setToast({ kind: 'error', text: '至少需要 2 页才能导出为视频' });
+      return;
+    }
+    setExporting(true);
+    setExportProgress(0);
+    try {
+      await exportTacticVideo(tactic, {}, (progress) => setExportProgress(progress));
+      setToast({ kind: 'success', text: '视频已导出（.webm）' });
+    } catch (error) {
+      setToast({ kind: 'error', text: error?.message === 'VIDEO_EXPORT_UNSUPPORTED' ? '当前浏览器不支持视频导出' : '导出失败，请稍后再试' });
+    } finally {
+      setExporting(false);
+      setExportProgress(0);
     }
   }
 
@@ -325,6 +352,9 @@ export default function TacticEditor({ tacticId }) {
           <button className="button button--secondary" onClick={persist}><Save size={17} />保存</button>
           <button className="button button--secondary" onClick={handlePublish} disabled={publishing}>
             <Upload size={17} />{publishing ? '发布中…' : '发布到广场'}
+          </button>
+          <button className="button button--secondary" onClick={handleExportVideo} disabled={exporting || tactic.frames.length < 2}>
+            <Video size={17} />{exporting ? `导出 ${Math.round(exportProgress * 100)}%` : '导出视频'}
           </button>
           <button className="button button--primary" onClick={togglePlayback} disabled={tactic.frames.length < 2}>
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}
