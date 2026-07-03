@@ -197,6 +197,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .editor-loading { height: 100vh; display: flex; flex-direction: column; gap: 13px; align-items: center; justify-content: center; color: @muted; }
 .editor-topbar { height: 52px; flex: 0 0 52px; background: white; border-bottom: 1px solid @line; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .editor-topbar__left, .editor-topbar__right { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.editor-topbar__user { display: flex; align-items: center; }
 .editor-brand { display: flex; align-items: center; gap: 7px; color: @primary-dark; font-weight: 850; font-size: 13px; white-space: nowrap; }
 .topbar-divider { height: 22px; width: 1px; background: @line; margin: 0 2px; }
 .tactic-title-input { border: 0; min-width: 100px; max-width: 320px; width: 24vw; padding: 6px 5px; font-weight: 750; font-size: 14px; color: @ink; }
@@ -404,10 +405,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
   .community-actions .button { min-height: 26px; font-size: 10px; padding: 0 8px; border-radius: 8px; }
 
   .editor-shell { height: auto; min-height: 100vh; overflow: visible; padding-bottom: 72px; }
-  .editor-topbar { position: sticky; top: 0; z-index: 20; height: 46px; flex: 0 0 46px; padding: 0 10px; gap: 6px; }
+  .editor-topbar { position: sticky; top: 0; z-index: 20; height: auto; flex: 0 0 auto; padding: 6px 10px; gap: 6px; flex-wrap: wrap; align-items: center; }
   .editor-topbar__left, .editor-topbar__right { gap: 4px; }
-  .editor-topbar__left { flex: 1 1 auto; min-width: 0; }
-  .editor-topbar__right { flex: 0 0 auto; }
+  .editor-topbar__left { flex: 1 1 auto; min-width: 0; order: 1; }
+  .editor-topbar__user { order: 2; flex: 0 0 auto; }
+  .editor-topbar__right { order: 3; flex: 1 0 100%; justify-content: flex-end; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid @line; }
   .editor-brand, .topbar-divider { display: none; }
   .editor-topbar__right .button span { display: none; }
   .editor-topbar__right .button { min-height: 30px; padding: 0 8px; font-size: 12px; gap: 0; }

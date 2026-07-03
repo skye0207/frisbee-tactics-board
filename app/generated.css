@@ -743,6 +743,10 @@ textarea:focus-visible {
   gap: 8px;
   min-width: 0;
 }
+.editor-topbar__user {
+  display: flex;
+  align-items: center;
+}
 .editor-brand {
   display: flex;
   align-items: center;
@@ -1802,10 +1806,12 @@ textarea:focus-visible {
     position: sticky;
     top: 0;
     z-index: 20;
-    height: 46px;
-    flex: 0 0 46px;
-    padding: 0 10px;
+    height: auto;
+    flex: 0 0 auto;
+    padding: 6px 10px;
     gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
   }
   .editor-topbar__left,
   .editor-topbar__right {
@@ -1814,9 +1820,19 @@ textarea:focus-visible {
   .editor-topbar__left {
     flex: 1 1 auto;
     min-width: 0;
+    order: 1;
+  }
+  .editor-topbar__user {
+    order: 2;
+    flex: 0 0 auto;
   }
   .editor-topbar__right {
-    flex: 0 0 auto;
+    order: 3;
+    flex: 1 0 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding-top: 4px;
+    border-top: 1px solid #e5e9ef;
   }
   .editor-brand,
   .topbar-divider {

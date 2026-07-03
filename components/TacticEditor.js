@@ -361,6 +361,9 @@ export default function TacticEditor({ tacticId }) {
             aria-label="战术名称"
           />
         </div>
+        <div className="editor-topbar__user">
+          <UserProfileButton />
+        </div>
         <div className="editor-topbar__right">
           <span className={`save-state save-state--${saveStatus}`}>
             {saveStatus === 'saving' ? <Cloud size={15} /> : saveStatus === 'saved' ? <Check size={15} /> : <CircleDot size={15} />}
@@ -382,7 +385,6 @@ export default function TacticEditor({ tacticId }) {
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}
             {isPlaying ? '停止播放' : '播放战术'}
           </button>
-          <UserProfileButton />
         </div>
       </header>
 
