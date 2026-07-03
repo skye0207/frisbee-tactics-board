@@ -83,8 +83,8 @@ export default function Dashboard() {
           </div>
         </div>
         <nav className="sidebar-nav">
-          <button className="sidebar-nav__item sidebar-nav__item--active"><Sparkles size={18} />我的战术</button>
           <button className="sidebar-nav__item" onClick={() => router.push('/community')}><Compass size={18} />战术广场</button>
+          <button className="sidebar-nav__item sidebar-nav__item--active"><Sparkles size={18} />我的战术</button>
         </nav>
         <div className="sidebar-tip">
           <span className="sidebar-tip__eyebrow">使用提示</span>

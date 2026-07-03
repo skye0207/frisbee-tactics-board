@@ -7,8 +7,8 @@ export default function MobileTabBar() {
   const router = useRouter();
   const pathname = usePathname();
   const items = [
-    { href: '/', label: '我的战术', icon: Sparkles, match: (p) => p === '/' },
-    { href: '/community', label: '战术广场', icon: Compass, match: (p) => p.startsWith('/community') }
+    { href: '/community', label: '战术广场', icon: Compass, match: (p) => p.startsWith('/community') },
+    { href: '/', label: '我的战术', icon: Sparkles, match: (p) => p === '/' }
   ];
   return (
     <nav className="mobile-tabbar" aria-label="主导航">
