@@ -2,8 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, Disc3, Download, Pause, Play, RotateCw, Video } from 'lucide-react';
-import { getCommunityTactic, importCommunityTactic } from '@/lib/client-storage';
+import { ArrowLeft, ChevronLeft, ChevronRight, Disc3, Download, History, Pause, Play, RotateCcw, RotateCw, Video, X } from 'lucide-react';
+import {
+  getCommunityTactic,
+  getCommunityVersion,
+  importCommunityTactic,
+  listCommunityVersions,
+  rollbackCommunityVersion,
+  unpublishCommunityTactic
+} from '@/lib/client-storage';
+import { fetchCurrentUser } from '@/lib/client-user';
 import { exportTacticVideo, isVideoExportSupported } from '@/lib/tactic-video';
 import FieldCanvas from './FieldCanvas';
 import FrameThumbnail from './FrameThumbnail';
@@ -22,6 +30,11 @@ function interpolateFrames(fromFrame, toFrame, progress) {
   return { ...toFrame, pieces };
 }
 
+function formatDateTime(value) {
+  const date = value ? new Date(value) : new Date();
+  return new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+}
+
 export default function CommunityTacticViewer({ tacticId }) {
   const router = useRouter();
   const [tactic, setTactic] = useState(null);
@@ -36,6 +49,11 @@ export default function CommunityTacticViewer({ tacticId }) {
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [toast, setToast] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [viewingVersion, setViewingVersion] = useState(null);
   const cancelledRef = useRef(false);
 
   useEffect(() => {
@@ -48,6 +66,7 @@ export default function CommunityTacticViewer({ tacticId }) {
       .catch(() => {
         if (!cancelledRef.current) setNotFound(true);
       });
+    fetchCurrentUser().then((u) => setCurrentUser(u));
     return () => { cancelledRef.current = true; };
   }, [tacticId]);
 
@@ -108,10 +127,10 @@ export default function CommunityTacticViewer({ tacticId }) {
     setImporting(true);
     try {
       const result = await importCommunityTactic(tactic);
-      setToast({ kind: 'success', text: '已导入到我的战术' });
+      setToast({ kind: 'success', text: '已复制到我的战术' });
       router.push(`/tactics/${result.tactic.id}`);
     } catch {
-      setToast({ kind: 'error', text: '导入失败' });
+      setToast({ kind: 'error', text: '复制失败' });
       setImporting(false);
     }
   }
@@ -139,6 +158,51 @@ export default function CommunityTacticViewer({ tacticId }) {
     }
   }
 
+  async function openVersions() {
+    setVersionsOpen(true);
+    setVersionsLoading(true);
+    try {
+      const list = await listCommunityVersions(tacticId);
+      setVersions(list);
+    } finally {
+      setVersionsLoading(false);
+    }
+  }
+
+  async function viewVersion(version) {
+    try {
+      const full = await getCommunityVersion(tacticId, version.id);
+      setViewingVersion(full);
+    } catch {
+      setToast({ kind: 'error', text: '加载版本详情失败' });
+    }
+  }
+
+  async function handleRollback(version) {
+    if (!window.confirm(`确认回退到 v${version.versionNo}？当前版本会自动存为新的历史记录。`)) return;
+    try {
+      const updated = await rollbackCommunityVersion(tacticId, version.id);
+      setTactic(updated);
+      setVersionsOpen(false);
+      setViewingVersion(null);
+      setToast({ kind: 'success', text: `已回退到 v${version.versionNo}` });
+      const list = await listCommunityVersions(tacticId);
+      setVersions(list);
+    } catch (e) {
+      setToast({ kind: 'error', text: e?.status === 401 ? '请先在右上角设置资料' : '回退失败' });
+    }
+  }
+
+  async function handleUnpublish() {
+    if (!window.confirm('确认从广场下架这个战术？相关的历史版本也会删除。')) return;
+    try {
+      await unpublishCommunityTactic(tacticId);
+      router.push('/community');
+    } catch {
+      setToast({ kind: 'error', text: '下架失败' });
+    }
+  }
+
   if (notFound) {
     return (
       <main className="editor-loading">
@@ -157,6 +221,8 @@ export default function CommunityTacticViewer({ tacticId }) {
   const activeFrame = tactic.frames?.[activeFrameIndex] || null;
   const previousFrame = activeFrameIndex > 0 ? tactic.frames?.[activeFrameIndex - 1] : null;
   const renderedFrame = displayFrame || activeFrame;
+  const isOwner = tactic.ownerUserId && currentUser && tactic.ownerUserId === currentUser.id;
+  const ownerName = tactic.ownerNickname || tactic.author || '匿名';
 
   return (
     <main className="editor-shell">
@@ -167,16 +233,24 @@ export default function CommunityTacticViewer({ tacticId }) {
           <span className="topbar-divider" />
           <div className="tactic-title-display">
             <strong>{tactic.title}</strong>
-            <span>{tactic.author ? `@${tactic.author}` : '匿名'} · 只读预览</span>
+            <span>{ownerName} · 只读预览</span>
           </div>
         </div>
         <div className="editor-topbar__right">
+          <button className="button button--secondary" onClick={openVersions}>
+            <History size={17} /><span>版本历史</span>
+          </button>
           <button className="button button--secondary" onClick={handleImport} disabled={importing}>
-            <Download size={17} />{importing ? '导入中…' : '导入编辑'}
+            <Download size={17} /><span>{importing ? '复制中…' : '复制到我的'}</span>
           </button>
           <button className="button button--secondary" onClick={handleExportVideo} disabled={exporting || tactic.frames.length < 2}>
-            <Video size={17} />{exporting ? `导出 ${Math.round(exportProgress * 100)}%` : '导出视频'}
+            <Video size={17} /><span>{exporting ? `导出 ${Math.round(exportProgress * 100)}%` : '导出视频'}</span>
           </button>
+          {isOwner && (
+            <button className="button button--secondary" onClick={handleUnpublish}>
+              <X size={17} /><span>下架</span>
+            </button>
+          )}
           <button className="button button--primary" onClick={togglePlayback} disabled={tactic.frames.length < 2}>
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}
             {isPlaying ? '停止播放' : '播放战术'}
@@ -275,7 +349,7 @@ export default function CommunityTacticViewer({ tacticId }) {
           <div className="panel-heading"><div><span>信息</span></div></div>
           <div className="property-section">
             <label>作者</label>
-            <div className="property-readonly">{tactic.author ? `@${tactic.author}` : '匿名'}</div>
+            <div className="property-readonly">{ownerName}</div>
           </div>
           <div className="property-section">
             <label>页面</label>
@@ -291,10 +365,91 @@ export default function CommunityTacticViewer({ tacticId }) {
             <label>战术说明</label>
             <div className="property-readonly property-readonly--multiline">{tactic.description || '暂无战术说明'}</div>
           </div>
+          <div className="property-section">
+            <label>更新时间</label>
+            <div className="property-readonly">{formatDateTime(tactic.updatedAt || tactic.publishedAt)}</div>
+          </div>
         </aside>
       </div>
 
+      {versionsOpen && (
+        <div className="modal-mask" onClick={() => { setVersionsOpen(false); setViewingVersion(null); }}>
+          <div className="modal modal--wide" onClick={(e) => e.stopPropagation()}>
+            <header className="modal__header">
+              <strong>版本历史</strong>
+              <button className="icon-button icon-button--subtle" onClick={() => { setVersionsOpen(false); setViewingVersion(null); }} aria-label="关闭"><X size={18} /></button>
+            </header>
+            <div className="modal__body">
+              {versionsLoading ? (
+                <div className="empty-state"><div className="loader" /><p>加载中…</p></div>
+              ) : versions.length === 0 ? (
+                <div className="empty-state"><p>暂无历史版本，只有更新过才会产生版本记录。</p></div>
+              ) : (
+                <div className="version-list">
+                  {versions.map((v) => (
+                    <div key={v.id} className="version-item">
+                      <div className="version-item__main">
+                        <strong>v{v.versionNo} · {v.title}</strong>
+                        <span>{v.editorNickname || '匿名'} · {formatDateTime(v.createdAt)}</span>
+                        {v.note && <small>{v.note}</small>}
+                      </div>
+                      <div className="version-item__actions">
+                        <button className="button button--secondary" onClick={() => viewVersion(v)}>查看</button>
+                        {isOwner && (
+                          <button className="button button--secondary" onClick={() => handleRollback(v)}>
+                            <RotateCcw size={14} />回退
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {viewingVersion && (
+                <VersionPreview version={viewingVersion} onClose={() => setViewingVersion(null)} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && <div className={`toast toast--${toast.kind}`}>{toast.text}</div>}
     </main>
+  );
+}
+
+function VersionPreview({ version, onClose }) {
+  const [index, setIndex] = useState(0);
+  const frame = version.frames?.[index] || null;
+  return (
+    <div className="version-preview">
+      <header>
+        <strong>v{version.versionNo} · {version.title}</strong>
+        <button className="icon-button icon-button--subtle" onClick={onClose} aria-label="关闭预览"><X size={16} /></button>
+      </header>
+      <div className="version-preview__frames">
+        {version.frames?.map((f, i) => (
+          <button
+            key={f.id || i}
+            className={`chip${i === index ? ' chip--active' : ''}`}
+            onClick={() => setIndex(i)}
+          >{i + 1}</button>
+        ))}
+      </div>
+      <div className="version-preview__canvas">
+        <FieldCanvas
+          frame={frame}
+          previousFrame={index > 0 ? version.frames?.[index - 1] : null}
+          selectedPieceId={null}
+          onSelectPiece={() => {}}
+          onMovePiece={() => {}}
+          onUpdateCurve={() => {}}
+          readOnly
+          showTrails
+          orientation="horizontal"
+        />
+      </div>
+      {version.description && <p className="version-preview__desc">{version.description}</p>}
+    </div>
   );
 }

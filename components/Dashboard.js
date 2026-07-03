@@ -6,6 +6,8 @@ import { ArrowRight, Cloud, Compass, Disc3, Download, MoreHorizontal, Plus, Sear
 import { createBlankTactic } from '@/lib/constants';
 import { createTactic, deleteTactic, listTactics, publishTactic } from '@/lib/client-storage';
 import MiniField from './MiniField';
+import UserProfileButton from './UserProfileButton';
+import SidebarTip from './SidebarTip';
 
 function formatDate(value) {
   const date = value ? new Date(value) : new Date();
@@ -57,11 +59,10 @@ export default function Dashboard() {
 
   async function handlePublish(event, tactic) {
     event.stopPropagation();
-    const author = window.prompt('署名（选填）', '') || '';
     setPublishingId(tactic.id);
     setMenuId(null);
     try {
-      await publishTactic(tactic, { author });
+      await publishTactic(tactic);
       setToast({ kind: 'success', text: `《${tactic.title}》已发布到战术广场` });
     } catch {
       setToast({ kind: 'error', text: '发布失败，请稍后再试' });
@@ -86,11 +87,7 @@ export default function Dashboard() {
           <button className="sidebar-nav__item" onClick={() => router.push('/community')}><Compass size={18} />战术广场</button>
           <button className="sidebar-nav__item sidebar-nav__item--active"><Sparkles size={18} />我的战术</button>
         </nav>
-        <div className="sidebar-tip">
-          <span className="sidebar-tip__eyebrow">使用提示</span>
-          <strong>复制页面，再移动队员</strong>
-          <p>播放器会自动补间相同编号队员的位置，形成连贯跑位动画。</p>
-        </div>
+        <SidebarTip className="sidebar-tip--desktop" />
       </aside>
 
       <section className="dashboard-main">
@@ -104,6 +101,7 @@ export default function Dashboard() {
             <Cloud size={15} />
             {mode === 'cloud' ? '云端数据库' : '本地演示模式'}
           </div>
+          <UserProfileButton />
         </header>
 
         <div className="dashboard-toolbar">
@@ -168,6 +166,8 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      <SidebarTip className="sidebar-tip--mobile" defaultClosed storageScope="mobile" />
 
       {toast && <div className={`toast toast--${toast.kind}`}>{toast.text}</div>}
     </main>

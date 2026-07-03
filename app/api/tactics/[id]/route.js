@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ensureSchema, getDb, hasDatabase, mapRow } from '@/lib/db';
+import { resolveUser } from '@/lib/user-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export async function GET(_request, { params }) {
 
 export async function PUT(request, { params }) {
   if (!hasDatabase()) return unavailable();
+  const { user } = await resolveUser(request);
   const { id } = await params;
   const tactic = await request.json();
   if (!tactic?.title || !Array.isArray(tactic?.frames)) {
@@ -27,12 +29,14 @@ export async function PUT(request, { params }) {
   await ensureSchema();
   const sql = getDb();
   const rows = await sql`
-    INSERT INTO tactics (id, title, description, frames, created_at, updated_at)
+    INSERT INTO tactics (id, title, description, frames, owner_user_id, community_source_id, created_at, updated_at)
     VALUES (
       ${id},
       ${tactic.title},
       ${tactic.description || ''},
       ${sql.json(tactic.frames)},
+      ${user?.id || null},
+      ${tactic.communitySourceId || null},
       ${tactic.createdAt || new Date().toISOString()},
       NOW()
     )
@@ -40,6 +44,8 @@ export async function PUT(request, { params }) {
       title = EXCLUDED.title,
       description = EXCLUDED.description,
       frames = EXCLUDED.frames,
+      community_source_id = EXCLUDED.community_source_id,
+      owner_user_id = COALESCE(tactics.owner_user_id, EXCLUDED.owner_user_id),
       updated_at = NOW()
     RETURNING *
   `;

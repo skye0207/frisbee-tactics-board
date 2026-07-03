@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Cloud, Compass, Disc3, Download, Search, Sparkles, Trash2 } from 'lucide-react';
-import { importCommunityTactic, listCommunityTactics, unpublishCommunityTactic } from '@/lib/client-storage';
+import { Cloud, Compass, Disc3, Download, Search, Sparkles } from 'lucide-react';
+import { importCommunityTactic, listCommunityTactics } from '@/lib/client-storage';
 import MiniField from './MiniField';
+import UserProfileButton from './UserProfileButton';
+import SidebarTip from './SidebarTip';
 
 function formatDate(value) {
   const date = value ? new Date(value) : new Date();
@@ -40,20 +42,13 @@ export default function Community() {
     setImportingId(tactic.id);
     try {
       const result = await importCommunityTactic(tactic);
-      setToast({ kind: 'success', text: '已导入到我的战术' });
+      setToast({ kind: 'success', text: '已复制到我的战术' });
       router.push(`/tactics/${result.tactic.id}`);
     } catch {
-      setToast({ kind: 'error', text: '导入失败' });
+      setToast({ kind: 'error', text: '复制失败' });
     } finally {
       setImportingId(null);
     }
-  }
-
-  async function handleUnpublish(event, tactic) {
-    event.stopPropagation();
-    if (!window.confirm('确认从广场下架这个战术吗？')) return;
-    await unpublishCommunityTactic(tactic.id);
-    setTactics((current) => current.filter((item) => item.id !== tactic.id));
   }
 
   const filtered = tactics.filter((item) => `${item.title} ${item.description} ${item.author}`.toLowerCase().includes(query.toLowerCase()));
@@ -72,11 +67,7 @@ export default function Community() {
           <button className="sidebar-nav__item sidebar-nav__item--active"><Compass size={18} />战术广场</button>
           <button className="sidebar-nav__item" onClick={() => router.push('/tactics')}><Sparkles size={18} />我的战术</button>
         </nav>
-        <div className="sidebar-tip">
-          <span className="sidebar-tip__eyebrow">社区</span>
-          <strong>发现他人的跑位设计</strong>
-          <p>浏览广场上的战术，一键导入到"我的战术"继续编辑。</p>
-        </div>
+        <SidebarTip eyebrow="社区提示" className="sidebar-tip--desktop" />
       </aside>
 
       <section className="dashboard-main">
@@ -90,6 +81,7 @@ export default function Community() {
             <Cloud size={15} />
             {mode === 'cloud' ? '云端数据库' : '本地演示模式'}
           </div>
+          <UserProfileButton />
         </header>
 
         <div className="dashboard-toolbar">
@@ -122,20 +114,15 @@ export default function Community() {
                   </div>
                   <p>{tactic.description || '暂无战术说明'}</p>
                   <div className="community-meta">
-                    <span>{tactic.author ? `@${tactic.author}` : '匿名'}</span>
-                    <span>{tactic.frames?.length || 0} 页 · {formatDate(tactic.publishedAt)}</span>
+                    <span>{tactic.ownerNickname || tactic.author || '匿名'}</span>
+                    <span>{tactic.frames?.length || 0} 页 · {formatDate(tactic.updatedAt || tactic.publishedAt)}</span>
                   </div>
                   <div className="community-actions">
                     <button
                       className="button button--primary"
                       onClick={(event) => handleImport(event, tactic)}
                       disabled={importingId === tactic.id}
-                    ><Download size={15} />{importingId === tactic.id ? '导入中…' : '导入编辑'}</button>
-                    <button
-                      className="icon-button icon-button--small"
-                      onClick={(event) => handleUnpublish(event, tactic)}
-                      aria-label="下架"
-                    ><Trash2 size={14} /></button>
+                    ><Download size={15} />{importingId === tactic.id ? '复制中…' : '复制到我的'}</button>
                   </div>
                 </div>
               </article>
@@ -143,6 +130,8 @@ export default function Community() {
           </div>
         )}
       </section>
+
+      <SidebarTip eyebrow="社区提示" className="sidebar-tip--mobile" defaultClosed storageScope="mobile" />
 
       {toast && <div className={`toast toast--${toast.kind}`}>{toast.text}</div>}
     </main>

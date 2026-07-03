@@ -10,6 +10,7 @@ import {
   CircleDot,
   Cloud,
   Disc3,
+  Download,
   Pause,
   Play,
   Plus,
@@ -22,12 +23,13 @@ import {
   UserRound,
   Video
 } from 'lucide-react';
-import { getTactic, publishTactic, saveTactic } from '@/lib/client-storage';
+import { getTactic, publishTactic, pullCommunityUpdate, saveTactic } from '@/lib/client-storage';
 import { exportTacticVideo, isVideoExportSupported } from '@/lib/tactic-video';
 import { makePiece } from '@/lib/constants';
 import { uuid } from '@/lib/uuid';
 import FieldCanvas from './FieldCanvas';
 import FrameThumbnail from './FrameThumbnail';
+import UserProfileButton from './UserProfileButton';
 
 function cloneFrame(frame, index) {
   return {
@@ -277,16 +279,30 @@ export default function TacticEditor({ tacticId }) {
 
   async function handlePublish() {
     if (!tactic || publishing) return;
-    const author = window.prompt('署名（选填）', '') || '';
     setPublishing(true);
     try {
       if (dirty) await persist();
-      await publishTactic(tactic, { author });
-      setToast({ kind: 'success', text: `《${tactic.title}》已发布到战术广场` });
+      await publishTactic(tactic);
+      setToast({ kind: 'success', text: `《${tactic.title}》已${tactic.publishedOnce ? '更新到' : '发布到'}战术广场` });
+      setTactic((current) => current ? { ...current, publishedOnce: true } : current);
     } catch {
       setToast({ kind: 'error', text: '发布失败，请稍后再试' });
     } finally {
       setPublishing(false);
+    }
+  }
+
+  async function handlePull() {
+    if (!tactic || !tactic.communitySourceId) return;
+    if (!window.confirm('拉取广场最新版本会覆盖当前战术的所有页面，确定继续？')) return;
+    try {
+      const result = await pullCommunityUpdate(tactic);
+      setTactic(result.tactic);
+      setDirty(false);
+      setSaveStatus('saved');
+      setToast({ kind: 'success', text: '已拉取广场最新版本' });
+    } catch {
+      setToast({ kind: 'error', text: '拉取失败' });
     }
   }
   function togglePlayback() {
@@ -350,17 +366,23 @@ export default function TacticEditor({ tacticId }) {
             {saveStatus === 'saving' ? <Cloud size={15} /> : saveStatus === 'saved' ? <Check size={15} /> : <CircleDot size={15} />}
             {saveStatus === 'saving' ? '保存中' : saveStatus === 'saved' ? '已保存' : '有修改'}
           </span>
-          <button className="button button--secondary" onClick={persist}><Save size={17} />保存</button>
+          <button className="button button--secondary" onClick={persist}><Save size={17} /><span>保存</span></button>
           <button className="button button--secondary" onClick={handlePublish} disabled={publishing}>
-            <Upload size={17} />{publishing ? '发布中…' : '发布到广场'}
+            <Upload size={17} /><span>{publishing ? '发布中…' : '发布/更新到广场'}</span>
           </button>
+          {tactic.communitySourceId && (
+            <button className="button button--secondary" onClick={handlePull} title="从广场拉取最新">
+              <Download size={17} /><span>拉取广场最新</span>
+            </button>
+          )}
           <button className="button button--secondary" onClick={handleExportVideo} disabled={exporting || tactic.frames.length < 2}>
-            <Video size={17} />{exporting ? `导出 ${Math.round(exportProgress * 100)}%` : '导出视频'}
+            <Video size={17} /><span>{exporting ? `导出 ${Math.round(exportProgress * 100)}%` : '导出视频'}</span>
           </button>
           <button className="button button--primary" onClick={togglePlayback} disabled={tactic.frames.length < 2}>
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}
             {isPlaying ? '停止播放' : '播放战术'}
           </button>
+          <UserProfileButton />
         </div>
       </header>
 
